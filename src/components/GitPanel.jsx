@@ -205,7 +205,8 @@ const STATUS_STYLE = {
   modified: { color: 'text-yellow', bg: 'bg-yellow/10', label: 'M' },
   added:    { color: 'text-green',  bg: 'bg-green/10',  label: 'A' },
   deleted:  { color: 'text-red',    bg: 'bg-red/10',    label: 'D' },
-  untracked:{ color: 'text-text-muted', bg: 'bg-bg-hover', label: 'U' },
+  untracked:{ color: 'text-green',  bg: 'bg-green/10',  label: 'U' },
+  copied:   { color: 'text-green',  bg: 'bg-green/10',  label: 'C' },
   renamed:  { color: 'text-accent', bg: 'bg-accent/10', label: 'R' },
 }
 

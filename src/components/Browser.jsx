@@ -2,8 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import { Globe, ExternalLink, RefreshCw, ArrowLeft, ArrowRight } from 'lucide-react'
 
 export default function Browser({ url: initialUrl, onUrlChange }) {
-  const [url, setUrl] = useState(initialUrl || 'https://google.com')
-  const [loadedUrl, setLoadedUrl] = useState(initialUrl || 'https://google.com')
+  const [url, setUrl] = useState(initialUrl || 'https://webcrft.io')
+  const [loadedUrl, setLoadedUrl] = useState(initialUrl || 'https://webcrft.io')
   const iframeRef = useRef(null)
 
   useEffect(() => {
@@ -60,8 +60,20 @@ export default function Browser({ url: initialUrl, onUrlChange }) {
           ref={iframeRef}
           src={loadedUrl}
           className="w-full h-full border-none bg-white"
-          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
+          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-top-navigation-by-user-activation"
           title="Browser"
+          onLoad={() => {
+            try {
+              const iframeUrl = iframeRef.current?.contentWindow?.location?.href
+              if (iframeUrl && iframeUrl !== 'about:blank' && iframeUrl !== loadedUrl) {
+                setUrl(iframeUrl)
+                setLoadedUrl(iframeUrl)
+                onUrlChange?.(iframeUrl)
+              }
+            } catch {
+              // Cross-origin — can't read URL, that's fine
+            }
+          }}
         />
       </div>
     </div>

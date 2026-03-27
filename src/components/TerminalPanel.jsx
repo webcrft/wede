@@ -1,6 +1,7 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, createRef } from 'react'
 import { Plus, X, TerminalSquare, Maximize2, Minimize2 } from 'lucide-react'
 import Terminal from './Terminal'
+import TerminalToolbar from './TerminalToolbar'
 import { useTheme } from '../hooks/useTheme'
 
 function loadTerminals() {
@@ -38,6 +39,7 @@ export default function TerminalPanel({ token, authFetch, visible, isFullscreen,
     return saved ? Number(saved) : terminals[0]?.id || 1
   })
   const reconciledRef = useRef(false)
+  const termRefs = useRef({})
 
   // On mount, check which sessions are still alive on the server and reconcile
   useEffect(() => {
@@ -48,12 +50,10 @@ export default function TerminalPanel({ token, authFetch, visible, isFullscreen,
       .then(res => res.json())
       .then(data => {
         const serverSessions = new Set(data.sessions || [])
-        if (serverSessions.size === 0) return // no server sessions, keep local tabs (they'll create new sessions)
+        if (serverSessions.size === 0) return
 
         setTerminals(prev => {
-          // Check if any saved terminals have living server sessions
           const alive = prev.filter(t => serverSessions.has(`term-${t.id}`))
-          // Also check for server sessions we don't have tabs for
           const knownIds = new Set(prev.map(t => `term-${t.id}`))
           const orphans = [...serverSessions]
             .filter(s => s.startsWith('term-') && !knownIds.has(s))
@@ -64,10 +64,9 @@ export default function TerminalPanel({ token, authFetch, visible, isFullscreen,
             })
 
           if (alive.length > 0 || orphans.length > 0) {
-            const merged = [...alive, ...orphans]
-            return merged
+            return [...alive, ...orphans]
           }
-          return prev // keep as-is, new sessions will be created on connect
+          return prev
         })
       })
       .catch(() => {})
@@ -96,6 +95,11 @@ export default function TerminalPanel({ token, authFetch, visible, isFullscreen,
       }
       return next
     })
+  }, [activeId])
+
+  const handleToolbarSend = useCallback((data) => {
+    const ref = termRefs.current[activeId]
+    if (ref) ref.send(data)
   }, [activeId])
 
   if (!visible) return null
@@ -153,6 +157,7 @@ export default function TerminalPanel({ token, authFetch, visible, isFullscreen,
         {terminals.map((t) => (
           <Terminal
             key={t.id}
+            ref={(r) => { if (r) termRefs.current[t.id] = r; else delete termRefs.current[t.id] }}
             token={token}
             sessionId={`term-${t.id}`}
             visible={activeId === t.id && visible}
@@ -160,6 +165,9 @@ export default function TerminalPanel({ token, authFetch, visible, isFullscreen,
           />
         ))}
       </div>
+
+      {/* Mobile special keys toolbar */}
+      {isMobile && <TerminalToolbar onSend={handleToolbarSend} />}
     </div>
   )
 }

@@ -1,15 +1,24 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
 import { Terminal as XTerminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 
-export default function Terminal({ token, sessionId, visible, terminalTheme, fontSize = 13 }) {
+export default forwardRef(function Terminal({ token, sessionId, visible, terminalTheme, fontSize = 13 }, ref) {
   const containerRef = useRef(null)
   const termRef = useRef(null)
   const wsRef = useRef(null)
   const fitRef = useRef(null)
   const reconnectRef = useRef(null)
   const mountedRef = useRef(true)
+
+  // Expose send function for external toolbar
+  useImperativeHandle(ref, () => ({
+    send: (data) => {
+      const ws = wsRef.current
+      if (ws && ws.readyState === WebSocket.OPEN) ws.send(data)
+      termRef.current?.focus()
+    }
+  }), [])
 
   useEffect(() => {
     mountedRef.current = true
@@ -33,6 +42,16 @@ export default function Terminal({ token, sessionId, visible, terminalTheme, fon
     term.loadAddon(fitAddon)
     term.loadAddon(webLinksAddon)
     term.open(containerRef.current)
+
+    // Disable mobile keyboard autocomplete/autocorrect on xterm's hidden textarea
+    const textarea = containerRef.current.querySelector('textarea')
+    if (textarea) {
+      textarea.setAttribute('autocomplete', 'off')
+      textarea.setAttribute('autocorrect', 'off')
+      textarea.setAttribute('autocapitalize', 'off')
+      textarea.setAttribute('spellcheck', 'false')
+      textarea.setAttribute('data-gramm', 'false')
+    }
 
     fitRef.current = fitAddon
     termRef.current = term
@@ -139,4 +158,4 @@ export default function Terminal({ token, sessionId, visible, terminalTheme, fon
   }, [visible])
 
   return <div ref={containerRef} className="h-full w-full" style={{ display: visible ? 'block' : 'none' }} />
-}
+})

@@ -66,29 +66,50 @@ func (h *Handler) Status(w http.ResponseWriter, r *http.Request) {
 			if len(line) < 4 {
 				continue
 			}
-			x := line[0]
-			y := line[1]
+			x := line[0] // index (staged) status
+			y := line[1] // working tree (unstaged) status
 			path := strings.TrimSpace(line[3:])
 
-			status := "modified"
-			switch {
-			case x == '?' || y == '?':
-				status = "untracked"
-			case x == 'A' || y == 'A':
-				status = "added"
-			case x == 'D' || y == 'D':
-				status = "deleted"
-			case x == 'R' || y == 'R':
-				status = "renamed"
+			// Handle renames: "R  old -> new"
+			if idx := strings.Index(path, " -> "); idx >= 0 {
+				path = path[idx+4:]
 			}
 
-			staged := x != ' ' && x != '?'
+			// Untracked files
+			if x == '?' && y == '?' {
+				files = append(files, StatusFile{Path: path, Status: "untracked", Staged: false})
+				continue
+			}
 
-			files = append(files, StatusFile{
-				Path:   path,
-				Status: status,
-				Staged: staged,
-			})
+			// Staged change (index column)
+			if x != ' ' && x != '?' {
+				status := "modified"
+				switch x {
+				case 'A':
+					status = "added"
+				case 'D':
+					status = "deleted"
+				case 'R':
+					status = "renamed"
+				case 'M':
+					status = "modified"
+				case 'C':
+					status = "copied"
+				}
+				files = append(files, StatusFile{Path: path, Status: status, Staged: true})
+			}
+
+			// Unstaged change (working tree column)
+			if y != ' ' && y != '?' {
+				status := "modified"
+				switch y {
+				case 'D':
+					status = "deleted"
+				case 'M':
+					status = "modified"
+				}
+				files = append(files, StatusFile{Path: path, Status: status, Staged: false})
+			}
 		}
 	}
 

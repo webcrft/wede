@@ -109,7 +109,7 @@ export default function IDE({ token, authFetch, onLogout, workspace, recents, on
   }, [authFetch, workspace])
 
   // ── Open a browser tab ──
-  const openBrowser = useCallback((url = 'https://google.com') => {
+  const openBrowser = useCallback((url = 'https://webcrft.io') => {
     // If there's already a browser tab, navigate it
     const existing = tabs.find((t) => t.type === 'browser')
     if (existing) {
@@ -128,6 +128,29 @@ export default function IDE({ token, authFetch, onLogout, workspace, recents, on
     setActiveTab(id)
     if (isMobile) setMobilePanel('code')
   }, [tabs, isMobile])
+
+  // Capture link clicks and open in preview browser
+  useEffect(() => {
+    const handler = (e) => {
+      const a = e.target.closest('a[href]')
+      if (!a) return
+      const href = a.getAttribute('href')
+      if (!href) return
+      if (href.startsWith('http://') || href.startsWith('https://')) {
+        e.preventDefault()
+        e.stopPropagation()
+        openBrowser(href)
+      }
+    }
+    // Use capture phase to intercept before browser handles ctrl+click
+    document.addEventListener('click', handler, true)
+    // Also intercept auxclick (middle-click)
+    document.addEventListener('auxclick', handler, true)
+    return () => {
+      document.removeEventListener('click', handler, true)
+      document.removeEventListener('auxclick', handler, true)
+    }
+  }, [openBrowser])
 
   const toggleSidebarTab = (tab) => {
     if (sidebarTab === tab && showSidebar) setShowSidebar(false)
@@ -333,7 +356,7 @@ export default function IDE({ token, authFetch, onLogout, workspace, recents, on
               <div className="flex-1 min-h-0">{renderTabContent()}</div>
             </div>
           )}
-          <div className="absolute inset-0 z-10" style={{ display: mobilePanel === 'terminal' ? 'block' : 'none' }}>
+          <div className={termFullscreen ? 'fixed inset-0 z-50' : 'absolute inset-0 z-10'} style={{ display: mobilePanel === 'terminal' ? 'block' : 'none' }}>
             <TerminalPanel key={terminalKey} token={token} authFetch={authFetch} visible={mobilePanel === 'terminal'}
               isFullscreen={termFullscreen} onToggleFullscreen={() => setTermFullscreen(!termFullscreen)} isMobile />
           </div>

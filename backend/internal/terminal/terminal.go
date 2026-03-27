@@ -21,6 +21,7 @@ var upgrader = websocket.Upgrader{
 
 type WorkspaceProvider interface {
 	Current() string
+	OnChange(func(string))
 }
 
 // session holds a persistent pty that survives websocket reconnects.
@@ -92,7 +93,24 @@ type Handler struct {
 }
 
 func New(ws WorkspaceProvider) *Handler {
-	return &Handler{ws: ws, sessions: make(map[string]*session)}
+	h := &Handler{ws: ws, sessions: make(map[string]*session)}
+	// Kill all terminal sessions when workspace changes so new ones open in the new directory
+	ws.OnChange(func(string) {
+		h.mu.Lock()
+		for id, s := range h.sessions {
+			s.mu.Lock()
+			if s.conn != nil {
+				s.conn.Close()
+			}
+			s.ptmx.Close()
+			s.cmd.Process.Kill()
+			s.closed = true
+			s.mu.Unlock()
+			delete(h.sessions, id)
+		}
+		h.mu.Unlock()
+	})
+	return h
 }
 
 func (h *Handler) getOrCreateSession(id string) (*session, bool, error) {

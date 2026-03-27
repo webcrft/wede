@@ -4,18 +4,18 @@ import Logo from './Logo'
 export default function ThemePicker({ onSelect }) {
   return (
     <div className="min-h-screen bg-[#111827] flex items-center justify-center p-4">
-      <div className="animate-fade-in text-center">
+      <div className="animate-fade-in text-center w-full max-w-md">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#1e293b] border border-[#334155] mb-6 overflow-hidden">
           <Logo size={40} />
         </div>
         <h1 className="text-2xl font-semibold text-[#f1f5f9] mb-2">Welcome to <span className="font-brand">wede</span></h1>
         <p className="text-[#94a3b8] mb-8">Choose your theme to get started</p>
 
-        <div className="flex gap-4 justify-center">
+        <div className="grid grid-cols-2 gap-4 px-2">
           {/* Dark */}
           <button
             onClick={() => onSelect('dark')}
-            className="group w-48 rounded-xl border-2 border-[#334155] hover:border-[#60a5fa] bg-[#0f172a] p-4 transition-all hover:shadow-lg hover:shadow-blue-500/10"
+            className="group rounded-xl border-2 border-[#334155] hover:border-[#60a5fa] bg-[#0f172a] p-4 transition-all hover:shadow-lg hover:shadow-blue-500/10"
           >
             <div className="rounded-lg bg-[#111827] border border-[#1e293b] p-3 mb-3">
               <div className="flex gap-1.5 mb-2">
@@ -39,7 +39,7 @@ export default function ThemePicker({ onSelect }) {
           {/* Light */}
           <button
             onClick={() => onSelect('light')}
-            className="group w-48 rounded-xl border-2 border-[#334155] hover:border-[#60a5fa] bg-[#0f172a] p-4 transition-all hover:shadow-lg hover:shadow-blue-500/10"
+            className="group rounded-xl border-2 border-[#334155] hover:border-[#60a5fa] bg-[#0f172a] p-4 transition-all hover:shadow-lg hover:shadow-blue-500/10"
           >
             <div className="rounded-lg bg-[#ffffff] border border-[#e2e8f0] p-3 mb-3">
               <div className="flex gap-1.5 mb-2">
