@@ -1,0 +1,1 @@
+- [No frontend linting](feedback_no_lint.md) — Don't run lint/eslint on the frontend
